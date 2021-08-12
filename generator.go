@@ -214,20 +214,13 @@ func (g *rfc4122Generator) getClockSequence() (uint64, uint16, error) {
 // Returns hardware address.
 func (g *rfc4122Generator) getHardwareAddr() ([]byte, error) {
 	var err error
-	g.hardwareAddrOnce.Do(func() {
-		if hwAddr, err := g.hwAddrFunc(); err == nil {
-			copy(g.hardwareAddr[:], hwAddr)
-			return
-		}
-
-		// Initialize hardwareAddr randomly in case
-		// of real network interfaces absence.
-		if _, err = io.ReadFull(g.rand, g.hardwareAddr[:]); err != nil {
-			return
-		}
-		// Set multicast bit as recommended by RFC 4122
-		g.hardwareAddr[0] |= 0x01
-	})
+	// Initialize hardwareAddr randomly in case
+	// of real network interfaces absence.
+	if _, err = io.ReadFull(g.rand, g.hardwareAddr[:]); err != nil {
+		return nil, err
+	}
+	// Set multicast bit as recommended by RFC 4122
+	g.hardwareAddr[0] |= 0x01
 	if err != nil {
 		return []byte{}, err
 	}
